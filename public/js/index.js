@@ -4,4 +4,4 @@ async function print_requests() {
     var games_list = document.getElementById("games-list");
     games_list.innerText = JSON.stringify(jsonData);
 }
-print_requests();
+// print_requests();

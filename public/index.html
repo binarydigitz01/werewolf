@@ -2,11 +2,16 @@
     <head>
         <title>Werewolf Game</title>
     </head>
-    <body>
-        Hello World!
-        <div id="games-list">
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+     var socket = io();
+    </script>
 
-        </div>
+    <body>
+        <form action="/joingame" method="get">
+            <input type="text" id="uname" name="uname">
+            <input type="submit">
+        </form>
         <script src="js/index.js"></script>
     </body>
 

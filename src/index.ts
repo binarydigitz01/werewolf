@@ -25,6 +25,7 @@ const playerDict: { [key: string]: String } = {};
 
 io.on('connection', (socket) => {
   io.to(socket.id).emit('existing_players', default_game.players);
+  io.to(socket.id).emit('game_settings', default_game.game_settings);
   socket.on("new_player", (username: String) => {
     default_game.add_player(username);
     playerDict[socket.id] = username;

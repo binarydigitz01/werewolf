@@ -29,6 +29,7 @@ export class Game{
   players: Player[];
   game_settings: GameSettings;
   votes: { [key: string] : number} = {};
+  wolf_votes: { [key: string] : number} = {};
 
   constructor(name: String, password: String) {
     this.name = name;
@@ -61,9 +62,9 @@ export class Game{
 export class GameSettings{
   // day_time: number = 5 * 60;
   // night_time: number = 30;
-  day_time: number = 10;
-  night_time: number = 5;
-  players: number = 3;
+  day_time: number = 80;
+  night_time: number = 20;
+  players: number = 5;
   werewolf_no = 1;
 }
 
@@ -91,22 +92,6 @@ export function start_game(io : Server, playerDict : { [key: string]: String }){
   // io.emit("game_phase_change", default_game.game_phase);
   clear_votes();
 
-  io.on("vote", (data: any)=>{
-    if(default_game.game_phase != GamePhase.DAY_PHASE)
-      return;
-    let player: Player = default_game.players[0]; // Dummy value
-    for(let p of default_game.players){
-      if(p.name.toString() == data.voter_name){
-        if(p.has_voted)
-          return;
-        else
-          player = p;
-      }
-    }
-    default_game.votes[data.player_name] +=1;
-    player.has_voted = true;
-  });
-
   change_to_day_phase(io, playerDict);
 
 }
@@ -114,6 +99,7 @@ export function start_game(io : Server, playerDict : { [key: string]: String }){
 function clear_votes(){
   for(let player of default_game.players){
     default_game.votes[player.name.toString()] = 0;
+    default_game.wolf_votes[player.name.toString()] = 0;
   }
 }
 
@@ -187,4 +173,19 @@ function change_to_night_phase(io: Server, playerDict : { [key: string]: String 
   },
     default_game.game_settings.night_time * 1000);
 
+}
+
+function vote_result(dict: { [key: string] : number}): string[]{
+  let res : string[] = [];
+  let max_votes: number = 0;
+  for(let key in dict){
+    if(dict[key] > max_votes)
+      max_votes = dict[key];
+  }
+  for(let key in dict){
+    if (dict[key] == max_votes){
+      res.push(key);
+    }
+  }
+  return res;
 }

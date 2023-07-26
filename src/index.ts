@@ -4,7 +4,7 @@ import { api } from "../api";
 import * as dotenv from "dotenv";
 import * as http from "http";
 import { Server } from "socket.io";
-import { default_game, start_game } from "./game";
+import { default_game, start_game, Player, GamePhase } from "./game";
 
 dotenv.config({ path: __dirname + "/.env" });
 const PORT = process.env.PORT || 3000;
@@ -42,6 +42,26 @@ io.on('connection', (socket) => {
   socket.on("disconnect", () => {
     socket.broadcast.emit("player_disconnect", playerDict[socket.id]);
     default_game.remove_player(playerDict[socket.id]);
+  })
+  socket.on("vote", (data: any) => {
+    if (default_game.game_phase == GamePhase.LOBBY_PHASE)
+      return;
+
+    // TODO implement werewolf voting in the night
+    // if(default_game.game_phase != GamePhase.DAY_PHASE)
+    //   return;
+    let player: Player = default_game.players[0]; // Dummy value
+    for (let p of default_game.players) {
+      if (p.name.toString() == data.voter_name) {
+        if (p.has_voted)
+          return;
+        else
+          player = p;
+      }
+    }
+    default_game.votes[data.player_name] += 1;
+    player.has_voted = true;
+
   })
 
 });

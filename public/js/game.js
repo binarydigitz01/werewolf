@@ -5,22 +5,40 @@ var username = getQuery.split('=')[1];
 
 var role = "villager";
 
+
+
 var players = [];
 players.push(username);
 var player_buttons = document.getElementById("player-buttons");
-player_buttons.innerHTML += username + '<br>';
+// player_buttons.innerHTML += createButton(username) + '<br>';
+
+function createButton(name){
+    // let button = `<button onclick="vote("${name}")">${name}</button>`;
+    // let button = "<button onclick=\"vote(\\\"" + name + "\\\")\">"+ name + "</button>";
+    // return button;
+    var bttn = document.createElement("button");
+    bttn.innerText = name;
+    bttn.setAttribute('onclick', `vote('${name}')`);
+    player_buttons.appendChild(bttn);
+    player_buttons.appendChild(document.createElement("br"));
+
+}
 
 function update_player_buttons(){
     player_buttons.innerHTML = "";
     for(let player of players){
-        player_buttons.innerHTML += player + '<br>';
+        // player_buttons.innerHTML += createButton(player) + '<br>';
+        createButton(player);
     }
 }
-
-var player_buttons = document.getElementById("player-buttons");
-player_buttons.innerHTML += username + '<br>';
+update_player_buttons();
 
 var socket = io();
+
+function vote(name){
+    console.log(`Voted ${name}`);
+    socket.emit("vote", {voter_name: username, player_name: name});
+}
 
 var game_settings;
 socket.on("game_settings",(_game_settings)=>{
@@ -50,6 +68,17 @@ socket.on('player_disconnect', (username)=>{
     }
     update_player_buttons();
 })
+socket.on('player_killed', (username)=>{
+    let list = [];
+    for(let p of players){
+        if(p != username){
+            list.push(p)
+        }
+        players = list;
+    }
+    update_player_buttons();
+})
+
 
 socket.on("role_werewolf", ()=>{
     role = "werewolf";

@@ -80,8 +80,16 @@ socket.on('player_killed', (username)=>{
 })
 
 
-socket.on("role_werewolf", ()=>{
-    role = "werewolf";
+socket.on("player_role", (player_type)=>{
+    switch(player_type){
+    case 1:
+        role = "villager";
+        break;
+    case 2:
+        role = "werewolf";
+        break;
+    }
+    message("The role of the player is " + role);
 })
 
 socket.on("game_phase_change", (game_phase)=>{
@@ -119,4 +127,8 @@ function display_time(){
     let minutes = Math.floor(time_remaining / 60);
     let seconds = time_remaining - minutes*60;
     timer.innerText = `Timer: ${minutes}:${seconds}`;
+}
+
+function message(mes){
+    prompt(mes);
 }

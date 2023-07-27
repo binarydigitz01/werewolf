@@ -4,7 +4,7 @@ import { api } from "../api";
 import * as dotenv from "dotenv";
 import * as http from "http";
 import { Server } from "socket.io";
-import { default_game, start_game, Player, GamePhase } from "./game";
+import { default_game, start_game, Player, GamePhase, PlayerType } from "./game";
 
 dotenv.config({ path: __dirname + "/.env" });
 const PORT = process.env.PORT || 3000;
@@ -50,17 +50,35 @@ io.on('connection', (socket) => {
     // TODO implement werewolf voting in the night
     // if(default_game.game_phase != GamePhase.DAY_PHASE)
     //   return;
-    let player: Player = default_game.players[0]; // Dummy value
-    for (let p of default_game.players) {
-      if (p.name.toString() == data.voter_name) {
-        if (p.has_voted)
-          return;
-        else
-          player = p;
+    if (default_game.game_phase == GamePhase.DAY_PHASE) {
+      let player: Player = default_game.players[0]; // Dummy value
+      for (let p of default_game.players) {
+        if (p.name.toString() == data.voter_name) {
+          if (p.has_voted)
+            return;
+          else
+            player = p;
+        }
+      }
+      default_game.votes[data.player_name] += 1;
+      player.has_voted = true;
+    } else if (default_game.game_phase == GamePhase.NIGHT_PHASE) {
+      console.log("reached wolf vote");
+      let werewolf: Player = default_game.players[0]; // Dummy value
+      for (let w of default_game.players) {
+        if (w.name.toString() == data.voter_name) {
+          if (w.has_voted || w.player_type == PlayerType.VILLAGER)
+          continue;
+          else
+            werewolf = w;
+        }
+      }
+      console.log(`werewolf: ${werewolf}`);
+      if(werewolf.player_type == PlayerType.WEREWOLF){
+        default_game.wolf_votes[data.player_name] += 1;
+        werewolf.has_voted = true;
       }
     }
-    default_game.votes[data.player_name] += 1;
-    player.has_voted = true;
 
   })
 

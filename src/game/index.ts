@@ -76,14 +76,21 @@ export function start_game(io : Server, playerDict : { [key: string]: String }){
 
   // Choosing werewolves
   // FIXME we can here select the same player twice, make a special function for this
-  let werewolves: string[] = [];
-  for(let i = 0; i < default_game.game_settings.werewolf_no; i++){
-    let werewolf = Math.ceil(Math.random() * player_number) -1;
-    werewolves.push(default_game.players[werewolf].name.toString());
-  }
+  // let werewolves: string[] = [];
+  // for(let i = 0; i < default_game.game_settings.werewolf_no; i++){
+  //   let werewolf = Math.ceil(Math.random() * player_number) -1;
+  //   werewolves.push(default_game.players[werewolf].name.toString());
+  // }
   // Telling the chosen werewolves their new roles
-  for(let werewolf of werewolves){
-    io.to(werewolf).emit("role_werewolf");
+  // for(let werewolf of werewolves){
+  //   io.to(werewolf).emit("role_werewolf");
+  // }
+  for(let i = 0; i < default_game.players.length; i++){
+    default_game.players[i].player_type = PlayerType.VILLAGER;
+  }
+  choose_role(PlayerType.WEREWOLF, default_game.game_settings.werewolf_no);
+  for (let p of default_game.players){
+    io.to(p.name.toString()).emit("player_role", p.player_type);
   }
 
   // Starting the game
@@ -123,21 +130,8 @@ function change_to_day_phase(io: Server, playerDict : { [key: string]: String })
       // Do stuff
 
     }
-    // Killing the player with maximum votes
-    let max_votes: number = 0;
-    let player_name: string = "";
-    for(let key in default_game.votes){
-      if(default_game.votes[key] > max_votes){
-        max_votes = default_game.votes[key];
-        player_name = key;
-      }
-    }
-    for(let i : number= 0; i < default_game.players.length; i++){
-      if (default_game.players[i].name.toString() == player_name){
-        default_game.players[i].is_alive = false;
-        io.emit('player_killed', default_game.players[i].name);
-      }
-    }
+    let voted_player : string = vote_result(default_game.votes)[0];
+    kill(voted_player, io);
     clear_votes();
     change_to_night_phase(io,  playerDict);
   },
@@ -153,22 +147,13 @@ function change_to_night_phase(io: Server, playerDict : { [key: string]: String 
       // Do stuff
 
     }
-    // // Killing the player with maximum votes
-    // let max_votes: number = 0;
-    // let player_name: string = "";
-    // for(let key in default_game.votes){
-    //   if(default_game.votes[key] > max_votes){
-    //     max_votes = default_game.votes[key];
-    //     player_name = key;
-    //   }
-    // }
-    // for(let i : number= 0; i < default_game.players.length; i++){
-    //   if (default_game.players[i].name.toString() == player_name){
-    //     default_game.players[i].is_alive = false;
-    //     io.emit('player_killed', default_game.players[i].name);
-    //   }
-    // }
-    // clear_votes();
+    let votees = vote_result(default_game.wolf_votes);
+    if(votees.length == 1){
+      // Kill
+      let victim: string = vote_result(default_game.wolf_votes)[0];
+      kill(victim, io);
+    }
+    clear_votes();
     change_to_day_phase(io,  playerDict);
   },
     default_game.game_settings.night_time * 1000);
@@ -186,6 +171,40 @@ function vote_result(dict: { [key: string] : number}): string[]{
     if (dict[key] == max_votes){
       res.push(key);
     }
+  }
+  return res;
+}
+
+function kill(player_name: string, io: Server) {
+  for (let i: number = 0; i < default_game.players.length; i++) {
+    if (default_game.players[i].name.toString() == player_name) {
+      default_game.players[i].is_alive = false;
+      io.emit('player_killed', default_game.players[i].name);
+    }
+  }
+
+}
+
+function choose_role(role: PlayerType, n: number): string[] {
+  if( n == 0) return [];
+  let res : string[] = [];
+  let players: Player[] = [];
+  for (let i = 0; i < default_game.players.length; i++){
+    if(default_game.players[i].player_type == PlayerType.VILLAGER){
+      players.push(default_game.players[i]);
+    }
+  }
+  let sp = players[Math.floor(Math.random()*players.length)];
+
+  for (let i = 0; i < default_game.players.length; i++){
+    if(sp.name == default_game.players[i].name){
+      default_game.players[i].player_type = role;
+    }
+  }
+  res.push(sp.name.toString());
+  let others = choose_role(role, n-1);
+  for( let p of others){
+    res.push(p);
   }
   return res;
 }

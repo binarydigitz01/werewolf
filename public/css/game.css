@@ -1,0 +1,24 @@
+/* extra color: #f92c85*/
+
+body {
+    margin: 0;
+    background-color: #fdf5df;
+}
+
+#game-phase{
+    text-align: center;
+    font-size: 70px;
+    font-weight: bold;
+}
+
+.player-button {
+    font-size: 20px;
+    padding: 5px 10px;
+    margin: 10px 10px;
+}
+#timer {
+    font-size: 50px;
+    padding: 5px 10px;
+    margin: 10px 10px;
+    text-align: center;
+}

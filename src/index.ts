@@ -63,20 +63,38 @@ io.on('connection', (socket) => {
       default_game.votes[data.player_name] += 1;
       player.has_voted = true;
     } else if (default_game.game_phase == GamePhase.NIGHT_PHASE) {
-      console.log("reached wolf vote");
       let werewolf: Player = default_game.players[0]; // Dummy value
       for (let w of default_game.players) {
         if (w.name.toString() == data.voter_name) {
           if (w.has_voted || w.player_type == PlayerType.VILLAGER)
-          continue;
+            continue;
           else
             werewolf = w;
         }
       }
-      console.log(`werewolf: ${werewolf}`);
-      if(werewolf.player_type == PlayerType.WEREWOLF){
+      if (werewolf.player_type == PlayerType.WEREWOLF) {
         default_game.wolf_votes[data.player_name] += 1;
         werewolf.has_voted = true;
+      } else if (werewolf.player_type == PlayerType.SEER) {
+        for (let p of default_game.players) {
+          if (p.name == data.player_name) {
+            if(p.has_voted)
+              return;
+            p.has_voted = true;
+            switch (p.player_type) {
+              case PlayerType.VILLAGER:
+                io.to(data.voter_name).emit("seer_result", `${data.player_name} is a villager`);
+                break;
+              case PlayerType.WEREWOLF:
+                io.to(data.voter_name).emit("seer_result", `${data.player_name} is a werewolf`);
+                break;
+              case PlayerType.SEER:
+                io.to(data.voter_name).emit("seer_result", `${data.player_name} is a Seer`);
+                break;
+
+            }
+          }
+        }
       }
     }
 

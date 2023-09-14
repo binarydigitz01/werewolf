@@ -18,6 +18,7 @@ function createButton(name){
     // return button;
     var bttn = document.createElement("button");
     bttn.innerText = name;
+    bttn.classList.add("player-button");
     bttn.setAttribute('onclick', `vote('${name}')`);
     player_buttons.appendChild(bttn);
     player_buttons.appendChild(document.createElement("br"));
@@ -77,6 +78,7 @@ socket.on('player_killed', (username)=>{
         players = list;
     }
     update_player_buttons();
+    message(`${username} Has been killed`);
 })
 
 
@@ -88,6 +90,8 @@ socket.on("player_role", (player_type)=>{
     case 2:
         role = "werewolf";
         break;
+    case 3:
+        role = "seer";
     }
     message("The role of the player is " + role);
 })
@@ -126,9 +130,13 @@ function display_time(){
     let timer = document.getElementById("timer");
     let minutes = Math.floor(time_remaining / 60);
     let seconds = time_remaining - minutes*60;
-    timer.innerText = `Timer: ${minutes}:${seconds}`;
+    timer.innerText = `${minutes}:${seconds}`;
 }
 
 function message(mes){
-    prompt(mes);
+    alert(mes);
 }
+
+socket.on('seer_result', (mes)=>{
+    message(mes);
+})
